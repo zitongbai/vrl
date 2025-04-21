@@ -7,7 +7,7 @@ class PerceptiveRobotCfg(LeggedRobotCfg):
         
         num_proprioception = 45
         num_proprioception_history = 0
-        num_height_measurements = 32*20
+        num_height_measurements = 33 * 21
         num_observations = (1+num_proprioception_history)*num_proprioception + num_height_measurements
 
         num_privileged_obs = None # if not None a priviledge_obs_buf will be returned by step() (critic obs for assymetric training). None is returned otherwise 
@@ -32,8 +32,10 @@ class PerceptiveRobotCfg(LeggedRobotCfg):
         # 1mx1.6m rectangle (without center line)
         # measured_points_x = [1.2, 1.05, 0.9, 0.75, 0.6, 0.45, 0.3, 0.15, 0., -0.15, -0.3, -0.45]
         # measured_points_y = [0.75, 0.6, 0.45, 0.3, 0.15, 0., -0.15, -0.3, -0.45, -0.6, -0.75]
-        measured_points_x = np.arange(-0.5, 1.1, 0.05).tolist()
-        measured_points_y = np.arange(-0.5, 0.5, 0.05).tolist()
+        measured_points_x = np.linspace(1.1, -0.5, 33).tolist()
+        measured_points_y = np.linspace(0.5, -0.5, 21).tolist()
+        
+        max_init_terrain_level = 4
         
     class noise(LeggedRobotCfg.noise):
         class noise_scales(LeggedRobotCfg.noise.noise_scales):
@@ -50,15 +52,15 @@ class PerceptiveRobotCfgPPO(LeggedRobotCfgPPO):
         
         # TODO: add checking 
         num_proprioception = 45
-        height_measurements_size = (32, 20)
+        height_measurements_size = (33, 21)
         
         propr_rnn_type = 'gru'
-        propr_rnn_hidden_size = 128
+        propr_rnn_hidden_size = 256
         propr_rnn_num_layers = 1
         
-        height_encoder_output_dim=64
+        height_encoder_output_dim=32
         height_rnn_type='gru'
-        height_rnn_hidden_size=128
+        height_rnn_hidden_size=256
         height_rnn_num_layers=1
         
     class algorithm(LeggedRobotCfgPPO.algorithm):

@@ -16,7 +16,7 @@ class Go2PerceptiveCfg(PerceptiveRobotCfg):
     
     class commands(PerceptiveRobotCfg.commands):
         class ranges(PerceptiveRobotCfg.commands.ranges):
-            lin_vel_x = [0.0, 1.0] # min max [m/s]
+            lin_vel_x = [-1.0, 1.0] # min max [m/s]
             lin_vel_y = [-0.5, 0.5]   # min max [m/s]
             ang_vel_yaw = [-1, 1]    # min max [rad/s]
             heading = [-3.14, 3.14]
@@ -64,7 +64,7 @@ class Go2PerceptiveCfg(PerceptiveRobotCfg):
 
     class rewards( PerceptiveRobotCfg.rewards ):
         class scales( PerceptiveRobotCfg.rewards.scales ):
-            termination = -100.0
+            termination = -20.0
             tracking_lin_vel = 1.5
             tracking_ang_vel = 0.5
             lin_vel_z = -2.0
@@ -73,7 +73,7 @@ class Go2PerceptiveCfg(PerceptiveRobotCfg):
             torques = -1e-5
             dof_vel = -0.
             dof_acc = -2.5e-7
-            base_height = -0. 
+            base_height = -0.5
             feet_air_time =  1.5
             collision = -10.0
             feet_stumble = -0.0 

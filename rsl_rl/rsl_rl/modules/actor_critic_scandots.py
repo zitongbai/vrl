@@ -36,17 +36,46 @@ class Actor(nn.Module):
         )
         print(f"Proprioception RNN: {self.proprioception_memory}")
 
+        # self.height_encoder = nn.Sequential(
+        #     nn.Conv2d(in_channels=1, out_channels=8, kernel_size=3, stride=1, padding=2),
+        #     nn.MaxPool2d(kernel_size=2, stride=2),
+        #     nn.ELU(),
+        #     nn.Conv2d(in_channels=8, out_channels=16, kernel_size=2, stride=1),
+        #     nn.MaxPool2d(kernel_size=2, stride=2),
+        #     nn.ELU(),
+        #     nn.Flatten(),
+        #     nn.Linear(640, height_encoder_output_dim),
+        #     nn.ELU(),
+        # )
+        
+        # self.height_encoder = nn.Sequential(
+        #     nn.Conv2d(in_channels=1, out_channels=8, kernel_size=3, stride=2, padding=2),
+        #     nn.Conv2d(in_channels=8, out_channels=32, kernel_size=2, stride=2), 
+        #     nn.Conv2d(in_channels=32, out_channels=32, kernel_size=1, stride=1),
+        #     nn.ELU(),
+        #     nn.Flatten(),
+        #     nn.Linear(32 * 6 * 6, height_encoder_output_dim),
+        #     nn.ELU(),
+        # )
+        
         self.height_encoder = nn.Sequential(
-            nn.Conv2d(in_channels=1, out_channels=8, kernel_size=3, stride=1, padding=2),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.ELU(),
-            nn.Conv2d(in_channels=8, out_channels=16, kernel_size=2, stride=1),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.ELU(),
-            nn.Flatten(),
-            nn.Linear(640, height_encoder_output_dim),
-            nn.ELU(),
+            # 输入：1×33×21
+            nn.Conv2d(1, 16, kernel_size=3, padding=1),  # Conv3×3, 16 ch
+            nn.BatchNorm2d(16),
+            nn.ReLU(inplace=True),
+
+            nn.MaxPool2d(2, 2),                          # 尺寸减半: ~16×16
+
+            # 空洞卷积扩大感受野
+            nn.Conv2d(16, height_encoder_output_dim, kernel_size=3, dilation=2, padding=2),  # Conv3×3, dilation=2, height_encoder_output_dim ch
+            nn.BatchNorm2d(height_encoder_output_dim),
+            nn.ReLU(inplace=True),
+
+            # 直接全局平均池化到 1×1
+            nn.AdaptiveAvgPool2d((1, 1)),
+            nn.Flatten(),  # → [B, height_encoder_output_dim]
         )
+        
         print(f"Height Encoder: {self.height_encoder}")
         
         self.height_memory = Memory(

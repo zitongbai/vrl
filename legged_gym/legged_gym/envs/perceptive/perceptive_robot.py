@@ -59,7 +59,7 @@ class PerceptiveRobot(LeggedRobot):
         
         if self.cfg.terrain.measure_heights:
             # TODO: what is the magic number 0.5?
-            heights = torch.clip(self.root_states[:, 2].unsqueeze(1) - 0.5 - self.measured_heights, -1, 1.) * self.obs_scales.height_measurements
+            heights = torch.clip(self.root_states[:, 2].unsqueeze(1) - 0.33 - self.measured_heights, -1, 1.) * self.obs_scales.height_measurements
             if self.add_noise:
                 # TODO: horizontal offsets
                 heights += self.height_noise_scale_vec * (2 * torch.rand(self.num_envs, self.num_height_points, device=self.device) - 1)
