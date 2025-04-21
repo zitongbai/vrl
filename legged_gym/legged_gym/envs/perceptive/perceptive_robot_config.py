@@ -54,14 +54,15 @@ class PerceptiveRobotCfgPPO(LeggedRobotCfgPPO):
         num_proprioception = 45
         height_measurements_size = (33, 21)
         
-        propr_rnn_type = 'gru'
-        propr_rnn_hidden_size = 256
-        propr_rnn_num_layers = 1
+        cnn_channels=[16, 32, 32]
+        cnn_kernel_sizes=[2, 2, 1]
+        cnn_strides=[2, 1, 1]
+        cnn_padding=[0, 0, 0]
+        cnn_embedding_dim=32
         
-        height_encoder_output_dim= 128
-        height_rnn_type='gru'
-        height_rnn_hidden_size=256
-        height_rnn_num_layers=1
+        rnn_type='gru'
+        rnn_hidden_size=256
+        rnn_num_layers=1
         
     class algorithm(LeggedRobotCfgPPO.algorithm):
         # training params
