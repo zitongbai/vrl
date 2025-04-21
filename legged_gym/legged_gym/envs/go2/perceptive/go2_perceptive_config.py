@@ -6,10 +6,10 @@ class Go2PerceptiveCfg(PerceptiveRobotCfg):
         terrain_proportions = [
             0.1,    # smooth slope
             0.1,    # rough slope
-            0.35,   # stairs up
-            0.25,   # stairs down
-            0.2,    # discrete
-            0.0,    # stepping stones
+            0.1,   # stairs up
+            0.1,   # stairs down
+            0.1,    # discrete
+            0.5,    # stepping stones
             0.0,    # gap
             0.0,    # pit
         ]

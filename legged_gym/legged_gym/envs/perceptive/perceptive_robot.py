@@ -13,7 +13,7 @@ class PerceptiveRobot(LeggedRobot):
     def __init__(self, cfg, sim_params, physics_engine, sim_device, headless):
         super().__init__(cfg, sim_params, physics_engine, sim_device, headless)
         
-        self.debug_viz = False  # This would slow down the training
+        self.debug_viz = True  # This would slow down the training
     
     def compute_observations(self):
         """ Computes observations, override in child classes.

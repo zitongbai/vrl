@@ -117,6 +117,7 @@ class Terrain:
         discrete_obstacles_height = 0.05 + difficulty * 0.2
         stepping_stones_size = 1.5 * (1.05 - difficulty)
         stone_distance = 0.05 if difficulty==0 else 0.1
+        stone_max_height = difficulty * 0.2
         gap_size = 1. * difficulty
         pit_depth = 1. * difficulty
         if choice < self.proportions[0]:
@@ -136,7 +137,7 @@ class Terrain:
             rectangle_max_size = 2.
             terrain_utils.discrete_obstacles_terrain(terrain, discrete_obstacles_height, rectangle_min_size, rectangle_max_size, num_rectangles, platform_size=3.)
         elif choice < self.proportions[5]:
-            terrain_utils.stepping_stones_terrain(terrain, stone_size=stepping_stones_size, stone_distance=stone_distance, max_height=0., platform_size=4.)
+            terrain_utils.stepping_stones_terrain(terrain, stone_size=stepping_stones_size, stone_distance=stone_distance, max_height=stone_max_height, platform_size=2.)
         elif choice < self.proportions[6]:
             gap_terrain(terrain, gap_size=gap_size, platform_size=3.)
         else:
