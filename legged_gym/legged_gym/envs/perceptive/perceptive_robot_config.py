@@ -35,7 +35,7 @@ class PerceptiveRobotCfg(LeggedRobotCfg):
         measured_points_x = np.linspace(1.1, -0.5, 33).tolist()
         measured_points_y = np.linspace(0.5, -0.5, 21).tolist()
         
-        max_init_terrain_level = 4
+        max_init_terrain_level = 5
         
     class noise(LeggedRobotCfg.noise):
         class noise_scales(LeggedRobotCfg.noise.noise_scales):
@@ -58,7 +58,7 @@ class PerceptiveRobotCfgPPO(LeggedRobotCfgPPO):
         propr_rnn_hidden_size = 256
         propr_rnn_num_layers = 1
         
-        height_encoder_output_dim=32
+        height_encoder_output_dim= 128
         height_rnn_type='gru'
         height_rnn_hidden_size=256
         height_rnn_num_layers=1

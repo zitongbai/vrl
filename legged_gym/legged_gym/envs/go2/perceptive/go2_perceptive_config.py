@@ -76,7 +76,7 @@ class Go2PerceptiveCfg(PerceptiveRobotCfg):
             base_height = -0.5
             feet_air_time =  1.5
             collision = -10.0
-            feet_stumble = -0.0 
+            stumble = -1.0
             action_rate = -0.01
             stand_still = -0.001
 
