@@ -13,17 +13,15 @@ class PerceptiveRobotCfg(LeggedRobotCfg):
         num_privileged_obs = None # if not None a priviledge_obs_buf will be returned by step() (critic obs for assymetric training). None is returned otherwise 
         num_actions = 12
     
-    
-    
     class terrain(LeggedRobotCfg.terrain):
         # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete, stepping stones, gap, pit]
         terrain_proportions = [
-            0.1,    # smooth slope
-            0.1,    # rough slope
-            0.35,   # stairs up
-            0.25,   # stairs down
-            0.2,    # discrete
-            0.0,    # stepping stones
+            0.0,    # smooth slope
+            0.0,    # rough slope
+            0.0,   # stairs up
+            0.0,   # stairs down
+            0.0,    # discrete
+            1.0,    # stepping stones
             0.0,    # gap
             0.0,    # pit
         ]
@@ -34,9 +32,28 @@ class PerceptiveRobotCfg(LeggedRobotCfg):
         
         max_init_terrain_level = 5
         
+    class depth_image:
+        # ref: realsense datasheet
+        # https://dev.intelrealsense.com/docs/intel-realsense-d400-series-product-family-datasheet
+        use_depth_image = True
+        image_width = 160   # 640
+        image_height = 120 # 480
+        horizontal_fov_range = np.deg2rad([80, 90]) # in radians
+        class camera_pose:
+            # ref: unitree go2 camera mounting position
+            # 0.33 m
+            x_range = [0.33, 0.40]
+            # -0.015 m
+            y_range = [-0.03, 0.0]
+            # 0.07 m
+            z_range = [0.07, 0.10]
+            # 20 deg
+            pitch_range = np.deg2rad([10.0, 30.0])
+        
+        
     class commands(LeggedRobotCfg.commands):
         class ranges(LeggedRobotCfg.commands.ranges):
-            lin_vel_x = [-1.0, 1.0] # min max [m/s]
+            lin_vel_x = [-0.1, 1.0] # min max [m/s]
             lin_vel_y = [-0.5, 0.5]   # min max [m/s]
             ang_vel_yaw = [-1, 1]    # min max [rad/s]
             heading = [-3.14, 3.14]
