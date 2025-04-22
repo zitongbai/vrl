@@ -21,15 +21,6 @@ class Actor(nn.Module):
                     rnn_hidden_size=256,
                     rnn_num_layers=1,
                     
-                    # propr_rnn_type = 'gru',
-                    # propr_rnn_hidden_size = 256,
-                    # propr_rnn_num_layers = 1,
-                    
-                    # height_encoder_output_dim=32,
-                    # height_rnn_type='gru',
-                    # height_rnn_hidden_size=256,
-                    # height_rnn_num_layers=1,
-                    
                     mlp_hidden_dims=[512, 256, 128],
                     mlp_output_dim = 12,
                     mlp_activation='elu'):
