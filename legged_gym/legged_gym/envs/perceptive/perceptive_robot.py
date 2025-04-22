@@ -73,6 +73,13 @@ class PerceptiveRobot(LeggedRobot):
         # Reset history proprioception
         if self.cfg.env.num_proprioception_history > 1:
             self.proprioception_history_buf[env_ids, :, :] = 0.
+            
+    def _post_physics_step_callback(self):
+        self.gym.refresh_rigid_body_state_tensor(self.sim)
+        self.feet_pos = self.rigid_body_states.view(self.num_envs, self.num_bodies, 13)[:, self.feet_indices, 0:3]
+        self.feet_vel = self.rigid_body_states.view(self.num_envs, self.num_bodies, 13)[:, self.feet_indices, 7:10]
+        
+        super()._post_physics_step_callback()
         
     def _init_buffers(self):
         super()._init_buffers()
@@ -89,6 +96,13 @@ class PerceptiveRobot(LeggedRobot):
         # scandots
         if self.cfg.terrain.measure_heights:
             self.height_noise_scale_vec = self._get_height_noise_scale_vec()
+            
+        rigid_body_state = self.gym.acquire_rigid_body_state_tensor(self.sim)
+        self.gym.refresh_rigid_body_state_tensor(self.sim)
+
+        self.rigid_body_states = gymtorch.wrap_tensor(rigid_body_state)
+        self.feet_pos = self.rigid_body_states.view(self.num_envs, self.num_bodies, 13)[:, self.feet_indices, 0:3]
+        self.feet_vel = self.rigid_body_states.view(self.num_envs, self.num_bodies, 13)[:, self.feet_indices, 7:10]
         
     def _get_noise_scale_vec(self, cfg):
         """ Sets a vector used to scale the noise added to the observations.
@@ -116,3 +130,20 @@ class PerceptiveRobot(LeggedRobot):
         noise_vec = torch.ones(self.num_height_points, device=self.device, dtype=torch.float)
         noise_vec *= self.cfg.noise.noise_scales.height_measurements * self.cfg.noise.noise_level
         return noise_vec
+    
+    # --------------------------------------------------------------------------------------------
+    # reward functions
+    # --------------------------------------------------------------------------------------------
+    
+    def _reward_feet_clearance(self):
+        cur_footpos_translated = self.feet_pos - self.root_states[:, 0:3].unsqueeze(1)
+        footpos_in_body_frame = torch.zeros(self.num_envs, len(self.feet_indices), 3, device=self.device)
+        cur_footvel_translated = self.feet_vel - self.root_states[:, 7:10].unsqueeze(1)
+        footvel_in_body_frame = torch.zeros(self.num_envs, len(self.feet_indices), 3, device=self.device)
+        for i in range(len(self.feet_indices)):
+            footpos_in_body_frame[:, i, :] = quat_rotate_inverse(self.base_quat, cur_footpos_translated[:, i, :])
+            footvel_in_body_frame[:, i, :] = quat_rotate_inverse(self.base_quat, cur_footvel_translated[:, i, :])
+        
+        height_error = torch.square(footpos_in_body_frame[:, :, 2] - self.cfg.rewards.clearance_footpos_target).view(self.num_envs, -1)
+        foot_leteral_vel = torch.sqrt(torch.sum(torch.square(footvel_in_body_frame[:, :, :2]), dim=2)).view(self.num_envs, -1)
+        return torch.sum(height_error * foot_leteral_vel, dim=1)

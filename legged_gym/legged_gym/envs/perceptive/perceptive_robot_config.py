@@ -20,27 +20,61 @@ class PerceptiveRobotCfg(LeggedRobotCfg):
         terrain_proportions = [
             0.1,    # smooth slope
             0.1,    # rough slope
-            0.1,   # stairs up
-            0.1,   # stairs down
-            0.1,    # discrete
-            0.5,    # stepping stones
+            0.35,   # stairs up
+            0.25,   # stairs down
+            0.2,    # discrete
+            0.0,    # stepping stones
             0.0,    # gap
             0.0,    # pit
         ]
         
         measure_heights = True
-        # 1mx1.6m rectangle (without center line)
-        # measured_points_x = [1.2, 1.05, 0.9, 0.75, 0.6, 0.45, 0.3, 0.15, 0., -0.15, -0.3, -0.45]
-        # measured_points_y = [0.75, 0.6, 0.45, 0.3, 0.15, 0., -0.15, -0.3, -0.45, -0.6, -0.75]
-        measured_points_x = np.linspace(1.1, -0.5, 33).tolist()
-        measured_points_y = np.linspace(0.5, -0.5, 21).tolist()
+        measured_points_x = np.linspace(1.1, -0.5, 33).tolist() # from positive to negative
+        measured_points_y = np.linspace(0.5, -0.5, 21).tolist() # from positive to negative
         
         max_init_terrain_level = 5
+        
+    class commands(LeggedRobotCfg.commands):
+        class ranges(LeggedRobotCfg.commands.ranges):
+            lin_vel_x = [-1.0, 1.0] # min max [m/s]
+            lin_vel_y = [-0.5, 0.5]   # min max [m/s]
+            ang_vel_yaw = [-1, 1]    # min max [rad/s]
+            heading = [-3.14, 3.14]
         
     class noise(LeggedRobotCfg.noise):
         class noise_scales(LeggedRobotCfg.noise.noise_scales):
             pass
             
+    class rewards( LeggedRobotCfg.rewards ):
+        class scales( LeggedRobotCfg.rewards.scales ):
+            termination = -20.0
+            collision = -10.0
+            
+            tracking_lin_vel = 1.5
+            tracking_ang_vel = 0.5
+            lin_vel_z = -2.0
+            ang_vel_xy = -0.05
+            orientation = -1.0
+            base_height = -1.5
+            
+            torques = -1e-5
+            dof_vel = -0.
+            dof_acc = -2.5e-7
+            action_rate = -0.01
+            stand_still = -0.001
+            
+            feet_air_time =  1.5
+            feet_clearance = -0.5
+            stumble = -1.0
+            
+        only_positive_rewards = True # if true negative total rewards are clipped at zero (avoids early termination problems)
+        tracking_sigma = 0.25 # tracking reward = exp(-error^2/sigma)
+        soft_dof_pos_limit = 0.9 # percentage of urdf limits, values above this limit are penalized
+        soft_dof_vel_limit = 1.
+        soft_torque_limit = 1.
+        base_height_target = 0.33
+        max_contact_force = 100. # forces above this value are penalized
+        clearance_footpos_target = -0.1 # target foot position in body frame
 
 class PerceptiveRobotCfgPPO(LeggedRobotCfgPPO):
     

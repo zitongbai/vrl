@@ -1,26 +1,7 @@
 from legged_gym.envs.perceptive.perceptive_robot_config import PerceptiveRobotCfg, PerceptiveRobotCfgPPO
 
 class Go2PerceptiveCfg(PerceptiveRobotCfg):
-    class terrain(PerceptiveRobotCfg.terrain):
-        # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete, stepping stones, gap, pit]
-        terrain_proportions = [
-            0.1,    # smooth slope
-            0.1,    # rough slope
-            0.35,   # stairs up
-            0.25,   # stairs down
-            0.2,    # discrete
-            0.0,    # stepping stones
-            0.0,    # gap
-            0.0,    # pit
-        ]
     
-    class commands(PerceptiveRobotCfg.commands):
-        class ranges(PerceptiveRobotCfg.commands.ranges):
-            lin_vel_x = [-1.0, 1.0] # min max [m/s]
-            lin_vel_y = [-0.5, 0.5]   # min max [m/s]
-            ang_vel_yaw = [-1, 1]    # min max [rad/s]
-            heading = [-3.14, 3.14]
-
     class init_state( PerceptiveRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.42] # x,y,z [m]
         default_joint_angles = { # = target angles [rad] when action = 0.0
@@ -61,34 +42,6 @@ class Go2PerceptiveCfg(PerceptiveRobotCfg):
     class domain_rand(PerceptiveRobotCfg.domain_rand):
         friction_range = [0.2, 1.25] # on ground planes the friction combination mode is averaging, i.e total friction = (foot_friction + 1.)/2.
         randomize_base_mass = True
-
-    class rewards( PerceptiveRobotCfg.rewards ):
-        class scales( PerceptiveRobotCfg.rewards.scales ):
-            termination = -20.0
-            tracking_lin_vel = 1.5
-            tracking_ang_vel = 0.5
-            lin_vel_z = -2.0
-            ang_vel_xy = -0.05
-            orientation = -1.0
-            torques = -1e-5
-            dof_vel = -0.
-            dof_acc = -2.5e-7
-            base_height = -0.5
-            feet_air_time =  1.5
-            collision = -10.0
-            stumble = -1.0
-            action_rate = -0.01
-            stand_still = -0.001
-
-        only_positive_rewards = True # if true negative total rewards are clipped at zero (avoids early termination problems)
-        tracking_sigma = 0.25 # tracking reward = exp(-error^2/sigma)
-        soft_dof_pos_limit = 0.9 # percentage of urdf limits, values above this limit are penalized
-        soft_dof_vel_limit = 1.
-        soft_torque_limit = 1.
-        base_height_target = 0.33
-        max_contact_force = 100. # forces above this value are penalized
-
-
 
 
 class Go2PerceptiveCfgPPO(PerceptiveRobotCfgPPO):
