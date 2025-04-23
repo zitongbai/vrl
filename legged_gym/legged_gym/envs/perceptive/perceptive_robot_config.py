@@ -35,7 +35,7 @@ class PerceptiveRobotCfg(LeggedRobotCfg):
     class depth_image:
         # ref: realsense datasheet
         # https://dev.intelrealsense.com/docs/intel-realsense-d400-series-product-family-datasheet
-        use_depth_image = True
+        use_depth_image = False
         image_width = 160   # 640
         image_height = 120 # 480
         horizontal_fov_range = np.deg2rad([80, 90]) # in radians

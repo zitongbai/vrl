@@ -20,7 +20,8 @@ class PerceptiveRobot(LeggedRobot):
         self.debug_depth = False # This would slow down the training, only for debugging
         
     def post_physics_step(self):
-        self.update_depth_image()
+        if self.cfg.depth_image.use_depth_image:
+            self.update_depth_image()
         
         super().post_physics_step()
         
@@ -37,7 +38,7 @@ class PerceptiveRobot(LeggedRobot):
             cv2.imshow(window_name, img)
             cv2.waitKey(1)
             
-        if self.viewer and self.enable_viewer_sync and self.debug_viz:
+        if self.viewer and self.enable_viewer_sync and self.debug_viz and self.cfg.depth_image.use_depth_image:
             box_geom = gymutil.WireframeBoxGeometry(0.02, 0.06, 0.02, None, color=(1, 0, 0))
             for i in range(self.num_envs):
                 base_pos = (self.root_states[i, :3]).clone()
