@@ -64,15 +64,15 @@ class PerceptiveRobotCfg(LeggedRobotCfg):
             
     class rewards( LeggedRobotCfg.rewards ):
         class scales( LeggedRobotCfg.rewards.scales ):
-            termination = -20.0
-            collision = -10.0
+            termination = -0.0
+            collision = -1.0
             
             tracking_lin_vel = 1.5
             tracking_ang_vel = 0.5
             lin_vel_z = -2.0
             ang_vel_xy = -0.05
             orientation = -1.0
-            base_height = -1.5
+            base_height = -2.0
             
             torques = -1e-5
             dof_vel = -0.
