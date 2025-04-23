@@ -114,3 +114,37 @@ class Memory(torch.nn.Module):
         # When the RNN is an LSTM, self.hidden_states_a is a list with hidden_state and cell_state
         for hidden_state in self.hidden_states:
             hidden_state[..., dones, :] = 0.0
+            
+if __name__ == "__main__":
+    # Test ActorCriticRecurrent
+    device = torch.device("cuda:0")
+    acr = ActorCriticRecurrent(
+        num_actor_obs=45 + 33 * 21,
+        num_critic_obs=45 + 33 * 21,
+        num_actions=12,
+        actor_hidden_dims=[512, 256, 128],
+        critic_hidden_dims=[512, 256, 128],
+        activation='elu',
+        rnn_type='gru',
+        rnn_hidden_size=256,
+        rnn_num_layers=1,
+    ).to(device)
+    
+    print("Cuda memory after model creation")
+    print(torch.cuda.memory_summary())
+
+    obs = torch.randn((4096, 45 + 33 * 21), dtype=torch.float, device=device)
+    a = acr.act(obs)
+    
+    print("Cuda memory after inference")
+    print(torch.cuda.memory_summary())
+    
+    obs_batch = torch.randn((24, 1024, 45 + 33 * 21), dtype=torch.float, device=device)
+    masks = torch.ones((24, 1024), dtype=torch.bool, device=device)
+    
+    hidden_states = torch.randn((1, 1024, 256), dtype=torch.float, device=device)
+    a_batch = acr.act(obs_batch, masks=masks, hidden_states=hidden_states)
+    
+    print("Cuda memory after batch inference")
+    print(torch.cuda.memory_summary())
+    

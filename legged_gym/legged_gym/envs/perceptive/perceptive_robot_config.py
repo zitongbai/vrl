@@ -17,11 +17,11 @@ class PerceptiveRobotCfg(LeggedRobotCfg):
         # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete, stepping stones, gap, pit]
         terrain_proportions = [
             0.0,    # smooth slope
-            0.0,    # rough slope
+            0.3,    # rough slope
             0.0,   # stairs up
             0.0,   # stairs down
             0.0,    # discrete
-            1.0,    # stepping stones
+            0.7,    # stepping stones
             0.0,    # gap
             0.0,    # pit
         ]
@@ -49,6 +49,17 @@ class PerceptiveRobotCfg(LeggedRobotCfg):
             z_range = [0.07, 0.10]
             # 20 deg
             pitch_range = np.deg2rad([10.0, 30.0])
+        
+        crop = [2, 2, 2, 2] # [top, bottom, left, right]
+        noise_scale = 0.1 # noise scale for depth image
+        
+        far_clip = 3.0 # in meters
+        near_clip = 0.1 # in meters
+        
+        resize_width = 80
+        resize_height = 60
+        
+        buffer_size = 2
         
         
     class commands(LeggedRobotCfg.commands):
@@ -81,7 +92,7 @@ class PerceptiveRobotCfg(LeggedRobotCfg):
             stand_still = -0.001
             
             feet_air_time =  1.5
-            feet_clearance = -0.5
+            feet_clearance = -0.0
             stumble = -1.0
             
         only_positive_rewards = True # if true negative total rewards are clipped at zero (avoids early termination problems)
@@ -106,8 +117,8 @@ class PerceptiveRobotCfgPPO(LeggedRobotCfgPPO):
         height_measurements_size = (33, 21)
         
         cnn_channels=[16, 32, 32]
-        cnn_kernel_sizes=[2, 2, 1]
-        cnn_strides=[2, 1, 1]
+        cnn_kernel_sizes=[5, 3, 2]
+        cnn_strides=[3, 2, 1]
         cnn_padding=[0, 0, 0]
         cnn_embedding_dim=32
         

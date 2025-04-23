@@ -47,5 +47,5 @@ class Go2PerceptiveCfg(PerceptiveRobotCfg):
 class Go2PerceptiveCfgPPO(PerceptiveRobotCfgPPO):
     
     class runner(PerceptiveRobotCfgPPO.runner):
-        max_iterations = 1500 # number of policy updates
+        max_iterations = 5000 # number of policy updates
         experiment_name = 'go2_perceptive'

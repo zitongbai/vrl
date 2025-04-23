@@ -2,14 +2,17 @@ from isaacgym.torch_utils import *
 from isaacgym import gymtorch, gymapi, gymutil
 
 import torch
+import torchvision
 
 from legged_gym.envs import LeggedRobot
 from legged_gym import LEGGED_GYM_ROOT_DIR
+from legged_gym.utils import CircularBuffer
 
 from .perceptive_robot_config import PerceptiveRobotCfg
 
 import numpy as np
 import cv2
+from typing import List, Tuple, Dict, Any, Optional
 
 class PerceptiveRobot(LeggedRobot):
     cfg : PerceptiveRobotCfg
@@ -111,9 +114,36 @@ class PerceptiveRobot(LeggedRobot):
         self.gym.render_all_camera_sensors(self.sim)
         self.gym.start_access_image_tensors(self.sim)
         
-        # TODO
+        self.raw_depth_image = torch.stack(self.depth_image_tensors, dim=0)  # [envs, height, width]
+        print(self.raw_depth_image.shape)
+        self._process_depth_image()  # process, and results in self.depth_image
+        print(self.depth_image.shape)
+        
+        init_flag = self.episode_length_buf <= 1
+        reset_env = torch.where(init_flag)[0]
+        self.depth_image_buffer.push(self.depth_image, reset_env=reset_env)
         
         self.gym.end_access_image_tensors(self.sim)
+        
+    def _process_depth_image(self):
+        # process the raw depth image from gym
+        # raw_depth_image: [num_envs, height, width]
+        
+        # 1. crop the image
+        depth_img = self.raw_depth_image[:, self.cfg.depth_image.crop[0]:-self.cfg.depth_image.crop[1],
+                                                self.cfg.depth_image.crop[2]:-self.cfg.depth_image.crop[3]]
+        # 2. add noise
+        depth_img = depth_img + self.cfg.depth_image.noise_scale * (2 * torch.rand_like(depth_img) - 1)
+        
+        # 3. multiply by -1 and clip
+        depth_img = torch.clip(-1.0 * depth_img, self.cfg.depth_image.near_clip, self.cfg.depth_image.far_clip)
+        
+        # 4. resize
+        depth_img = self.depth_resize_tf(depth_img)
+        
+        # 5. normalize
+        self.depth_image = (depth_img - self.cfg.depth_image.near_clip) / (self.cfg.depth_image.far_clip - self.cfg.depth_image.near_clip) - 0.5
+        
     
     def reset_idx(self, env_ids):
         super().reset_idx(env_ids)
@@ -141,7 +171,7 @@ class PerceptiveRobot(LeggedRobot):
         super()._create_envs()
         
         self.camera_handles = []
-        self.depth_image_tensors = []
+        self.depth_image_tensors : List[torch.Tensor] = []
         if self.cfg.depth_image.use_depth_image:
             for i in range(self.num_envs):
                 env_handle = self.envs[i]
@@ -184,9 +214,11 @@ class PerceptiveRobot(LeggedRobot):
                 
                 # obtain depth image tensor
                 depth_image_gym_tensor = self.gym.get_camera_image_gpu_tensor(self.sim, env_handle, camera_handle, gymapi.IMAGE_DEPTH)
-                depth_image_tensor = gymtorch.wrap_tensor(depth_image_gym_tensor)
+                depth_image_tensor = gymtorch.wrap_tensor(depth_image_gym_tensor)   # [height, width]
                 self.depth_image_tensors.append(depth_image_tensor)
-        
+            self.depth_resize_tf = torchvision.transforms.Resize(
+                (self.cfg.depth_image.resize_height, self.cfg.depth_image.resize_width), 
+                interpolation=torchvision.transforms.InterpolationMode.BILINEAR)
         print(f"Created {self.num_envs} environments")
         
     def _init_buffers(self):
@@ -213,7 +245,15 @@ class PerceptiveRobot(LeggedRobot):
         self.feet_vel = self.rigid_body_states.view(self.num_envs, self.num_bodies, 13)[:, self.feet_indices, 7:10]
         
         if self.cfg.depth_image.use_depth_image:
-            pass
+            self.raw_depth_image = torch.zeros(self.num_envs, self.cfg.depth_image.image_height, self.cfg.depth_image.image_width, device=self.device)
+            self.depth_image = torch.zeros(self.num_envs, self.cfg.depth_image.resize_height, self.cfg.depth_image.resize_width, device=self.device)
+            self.depth_image_buffer = CircularBuffer(
+                time_steps=self.cfg.depth_image.buffer_size,
+                num_envs=self.num_envs,
+                shape=(self.cfg.depth_image.resize_height, self.cfg.depth_image.resize_width),
+                device=self.device,
+                dtype=torch.float
+            )
         
     def _get_noise_scale_vec(self, cfg):
         """ Sets a vector used to scale the noise added to the observations.

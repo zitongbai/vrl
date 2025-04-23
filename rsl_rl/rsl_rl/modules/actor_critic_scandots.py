@@ -38,11 +38,11 @@ class Actor(nn.Module):
             else:
                 input_channels = cnn_channels[i - 1]
             self.height_encoder.append(nn.Conv2d(input_channels, cnn_channels[i], kernel_size=cnn_kernel_sizes[i], stride=cnn_strides[i], padding=cnn_padding[i]))
-            self.height_encoder.append(nn.ELU())
-            self.height_encoder.append(nn.MaxPool2d(kernel_size=2, stride=1))
+            self.height_encoder.append(nn.ELU(inplace=True))
+            # self.height_encoder.append(nn.MaxPool2d(kernel_size=2, stride=1))
         self.height_encoder.append(nn.Flatten())
-        self.height_encoder.append(nn.Linear(2304, cnn_embedding_dim))
-        self.height_encoder.append(nn.ELU())
+        self.height_encoder.append(nn.Linear(96, cnn_embedding_dim))
+        self.height_encoder.append(nn.ELU(inplace=True))
         self.height_encoder = nn.Sequential(*self.height_encoder)
         
         print(f"Height Encoder: {self.height_encoder}")
@@ -84,10 +84,7 @@ class Actor(nn.Module):
         ) # merge steps and num_envs dimension
         # print(f"Height measurements shape: {height_measurements.shape}")
         
-        height_embedding = self.height_encoder(height_measurements)
-        # print(f"Height embedding shape: {height_embedding.shape}")
-        
-        height_embedding = height_embedding.view(
+        height_embedding = self.height_encoder(height_measurements).view(
             *proprioception.shape[:-1], -1
         )
         # print(f"Height embedding reshaped: {height_embedding.shape}")
@@ -177,7 +174,7 @@ class ActorCriticScandots(nn.Module):
             rnn_type=rnn_type,
             rnn_hidden_size=rnn_hidden_size,
             rnn_num_layers=rnn_num_layers,
-            mlp_hidden_dims=actor_hidden_dims,
+            mlp_hidden_dims=critic_hidden_dims,
             mlp_output_dim=1,
             mlp_activation=activation
         )
@@ -242,19 +239,20 @@ class ActorCriticScandots(nn.Module):
 
 if __name__ == "__main__":
     # test the class
+    device = torch.device("cuda:0")
     acs = ActorCriticScandots(
         num_actor_obs = 45 + 33*21,
         num_critic_obs = 45 + 33*21,
         num_actions = 12,
-        actor_hidden_dims=[256, 256, 256],
-        critic_hidden_dims=[256, 256, 256],
+        actor_hidden_dims=[512, 256, 128],
+        critic_hidden_dims=[512, 256, 128],
         activation='elu',
         num_proprioception = 45,
         height_measurements_size = (33, 21), 
         
         cnn_channels=[16, 32, 32],
-        cnn_kernel_sizes=[2, 2, 1],
-        cnn_strides=[2, 1, 1],
+        cnn_kernel_sizes=[5, 3, 2],
+        cnn_strides=[3, 2, 1],
         cnn_padding=[0, 0, 0],
         cnn_embedding_dim=32,
         
@@ -263,20 +261,33 @@ if __name__ == "__main__":
         rnn_num_layers=1,
         
         init_noise_std=1.0,
-    )
+    ).to(device)
+    
+    print("Cuda memory after model creation")
+    print(torch.cuda.memory_summary())
     
     print("--------------------------------------------------")
     print("Test inference mode (collection)")
-    obs = torch.randn(4096, 45 + 33*21)   # [num_envs, obs_size]
+    obs = torch.randn(4096, 45 + 33*21, dtype=torch.float, device=device)   # [num_envs, obs_size]
     a = acs.act(obs)
     print(f"Action shape: {a.shape}")   #   [4096, 12]
+    
+    print("cuda memory after inference")
+    print(torch.cuda.memory_summary())
     
     
     print("--------------------------------------------------")
     print("Test inference mode (batch)")
-    obs_batch = torch.randn(24, 233, 45 + 33*21)  # [time_steps, num_traj, obs_size]
-    masks = torch.ones(24, 233, dtype=torch.bool) # [time_steps, num_traj]
+    obs_batch = torch.randn(24, 1024, 45 + 33*21, dtype=torch.float, device=device)  # [time_steps, num_traj, obs_size]
+    masks = torch.ones(24, 1024, dtype=torch.bool, device=device) # [time_steps, num_traj]
     
-    hidden_states = torch.randn(1, 233, 256) # [num_layers, batch, hidden_dim]
+    hidden_states = torch.randn(1, 1024, 256, dtype=torch.float, device=device) # [num_layers, batch, hidden_dim]
     a_batch = acs.act(obs_batch, masks=masks, hidden_states=hidden_states)
-    print(f"Action shape: {a_batch.shape}")   #   [24, 233, 12]
+    print(f"Action shape: {a_batch.shape}")   #   [24, 1024, 12]
+    
+    print("cuda memory after inference")
+    print(torch.cuda.memory_summary())
+    
+    # torch.cuda.empty_cache()
+    # print("cuda memory after emptying cache")
+    # print(torch.cuda.memory_summary())
