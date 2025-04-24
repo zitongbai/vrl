@@ -109,6 +109,7 @@ class PerceptiveRobot(LeggedRobot):
             f"Observation buffer shape {self.obs_buf.shape} does not match expected shape {self.cfg.env.num_observations}"
     
     def update_depth_image(self):
+        self.gym.fetch_results(self.sim, True)
         self.gym.step_graphics(self.sim)
         # render sensors and refresh camera tensors
         self.gym.render_all_camera_sensors(self.sim)

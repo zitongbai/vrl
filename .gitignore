@@ -174,3 +174,5 @@ cython_debug/
 .pypirc
 
 legged_gym/logs/
+
+.vscode/
